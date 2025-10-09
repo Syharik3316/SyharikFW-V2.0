@@ -62,7 +62,11 @@ function readFirewallPorts() {
 
 function execFirewall(args) {
   return new Promise((resolve, reject) => {
-    execFile('python3', [firewallPy, ...args], { cwd: rootDir }, (err, stdout, stderr) => {
+    // Команды --add, --del, --run требуют sudo для работы с eBPF/XDP
+    const cmd = args.includes('--add') || args.includes('--del') || args.includes('--run') ? 'sudo' : 'python3';
+    const cmdArgs = cmd === 'sudo' ? ['python3', firewallPy, ...args] : [firewallPy, ...args];
+    
+    execFile(cmd, cmdArgs, { cwd: rootDir }, (err, stdout, stderr) => {
       if (err) return reject(new Error(stderr || err.message));
       resolve({ stdout, stderr });
     });
@@ -142,8 +146,8 @@ app.post('/api/firewall/start', async (req, res) => {
     const iface = (req.body && req.body.iface) ? String(req.body.iface) : undefined;
     const args = [firewallPy, '--run'];
     if (iface) args.push(iface);
-    // Запуск как отдельный процесс
-    firewallProc = spawn('python3', args, { cwd: rootDir, stdio: 'ignore', detached: true });
+    // Запуск как отдельный процесс с sudo (нужно для eBPF/XDP)
+    firewallProc = spawn('sudo', ['python3', ...args], { cwd: rootDir, stdio: 'ignore', detached: true });
     firewallProc.unref();
     // Дадим немного времени на инициализацию и вернём статус
     setTimeout(async () => {
