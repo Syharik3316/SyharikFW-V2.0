@@ -19,6 +19,7 @@
 Краткая инструкция по пользованию:
 - Необходимо иметь зависимости: (sudo apt install) python3 python3-bpfcc bpfcc-tools python3-pip pipx npm linux-headers-$(uname -r)
 - Зависимости pip: pipx install -r requirements.txt --include-deps
+- Зависимости npm: npm install express
 - Запуск веб сервера - "sudo npm start"
 - Запуск скрипта - "sudo python3 ./firewall.py"
 - Файл конфигурации и логов блокировок создадутся автоматически
