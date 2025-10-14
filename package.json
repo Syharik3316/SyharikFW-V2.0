@@ -1,5 +1,5 @@
 {
-  "name": "syharikhs-ports",
+  "name": "syharikhs-fw",
   "version": "1.1 Beta",
   "private": true,
   "description": "Firewall UI project by syharik3316",
@@ -12,5 +12,6 @@
     "express": "^4.19.2"
   }
 }
+
 
 
