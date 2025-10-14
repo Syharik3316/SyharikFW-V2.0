@@ -22,7 +22,7 @@
         </div>
 
         <p>Панель управления сетевыми портами серверов Vice Bloody</p>
-        <p>Все действия логируются и требуют подтверждения</p>
+        <p>Все действия логируются</p>
 
         <div class="buttons">
             <button class="btn" id="add-port-btn" onclick="showPortForm()">Добавить порт</button>
@@ -53,7 +53,7 @@
 
         <footer>
             <p>Vice Bloody Port Management System | © 2025 Все права защищены</p>
-            <p>Версия: 4.0.0 | Сборка: #VB-PORTS-2025-01-15</p>
+            <p>Версия: 1.1 Beta | Сборка: #VB-PORTS-14-10-2025</p>
         </footer>
     </div>
     <script>
@@ -189,7 +189,7 @@
                         body: JSON.stringify({ port: value })
                     });
                     if (resp.status === 409) {
-                        alert('Нельзя изменять порты во время работы firewall!');
+                        alert('Нельзя изменять порты во время работы firewall'a!');
                         return;
                     }
                     const state = await resp.json();
@@ -225,7 +225,7 @@
                 try {
                     const resp = await fetch(`${apiBase}/api/ports/${value}`, { method: 'DELETE' });
                     if (resp.status === 409) {
-                        alert('Нельзя изменять порты во время работы firewall!');
+                        alert('Нельзя изменять порты во время работы firewall'a!');
                         return;
                     }
                     const state = await resp.json();
@@ -245,7 +245,7 @@
             formsContainer.innerHTML = '';
             const hint = document.createElement('div');
             hint.className = 'port-form';
-            hint.innerHTML = '<p>Обновляю список портов...</p>';
+            hint.innerHTML = '<p>Обновляем список портов...</p>';
             formsContainer.appendChild(hint);
             // Принудительно перечитать state из бэкенда
             fetch(`${apiBase}/api/state`).then(r => r.json()).then(state => {
