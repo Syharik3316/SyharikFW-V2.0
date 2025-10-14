@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyharikHS - Панель Управления</title>
+    <title>SyharikFW - Панель Управления</title>
     <link rel="stylesheet" href="style.css">
     <script src=".js"></script>
 </head>
@@ -14,14 +14,14 @@
     <div class="corner-decoration bottom-right"></div>
 
     <div class="container">
-        <div class="team-name">SyharikFW</div>
-        <h1>Удобное управление firewall'ом</h1>
+        <div class="team-name">Syharik3316</div>
+        <h1>Удобное управление программой SyharikFW</h1>
 
         <div class="status offline" id="service-status">
-            СЕРВИС firewall'a НЕДОСТУПЕН. СТАТУС: OFFLINE
+            СЕРВИС SyharikFW НЕДОСТУПЕН. СТАТУС: OFFLINE
         </div>
 
-        <p>Панель управления firewall'ом серверов Syharik3316</p>
+        <p>Панель управления SyharikFW, для защиты серверов Syharik3316</p>
         <p>Все действия логируются</p>
 
         <div class="buttons">
@@ -133,7 +133,7 @@
         function setOffline() {
             statusElement.classList.remove('online');
             statusElement.classList.add('offline');
-            statusElement.textContent = 'СЕРВИС Firewall'a НЕДОСТУПЕН. СТАТУС: OFFLINE';
+            statusElement.textContent = 'СЕРВИС SyharikFW НЕДОСТУПЕН. СТАТУС: OFFLINE';
         }
 
         function applyStatus(status) {
@@ -143,7 +143,7 @@
             if (status === 'ONLINE') {
                 statusElement.classList.remove('offline');
                 statusElement.classList.add('online');
-                statusElement.textContent = 'СЕРВИС Firewall'a АКТИВЕН. СТАТУС: ONLINE';
+                statusElement.textContent = 'СЕРВИС SyharikFW АКТИВЕН. СТАТУС: ONLINE';
                 // Блокируем кнопки управления портами
                 if (addBtn) addBtn.disabled = true;
                 if (removeBtn) removeBtn.disabled = true;
@@ -189,7 +189,7 @@
                         body: JSON.stringify({ port: value })
                     });
                     if (resp.status === 409) {
-                        alert('Нельзя изменять порты во время работы firewall!');
+                        alert('Нельзя изменять порты во время работы SyharikFW!');
                         return;
                     }
                     const state = await resp.json();
@@ -225,7 +225,7 @@
                 try {
                     const resp = await fetch(`${apiBase}/api/ports/${value}`, { method: 'DELETE' });
                     if (resp.status === 409) {
-                        alert('Нельзя изменять порты во время работы firewall!');
+                        alert('Нельзя изменять порты во время работы SyharikFW!');
                         return;
                     }
                     const state = await resp.json();
