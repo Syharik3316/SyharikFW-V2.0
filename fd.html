@@ -15,14 +15,23 @@
     <div class="corner-decoration bottom-right"></div>
 
     <div class="container">
-        <div class="team-name">Syharik3316</div>
+        <div class="header-top">
+            <div class="team-name">Syharik3316</div>
+            <div class="user-menu" id="user-menu">
+                <div class="user-info" id="user-info">
+                    <span class="user-avatar">👤</span>
+                    <span class="username" id="username">admin</span>
+                    <button class="logout-btn" id="logout-btn" title="Выйти">🚪</button>
+                </div>
+            </div>
+        </div>
         <h1>Удобное управление программой SyharikFW</h1>
 
         <div class="status offline" id="service-status">
             СЕРВИС SyharikFW НЕДОСТУПЕН. СТАТУС: OFFLINE
         </div>
 
-        <p>Панель управления SyharikFW, для защиты серверов Syharik3316</p>
+        <p>Панель управления SyharikFW, для защиты серверов by Syharik3316</p>
         <p>Все действия логируются</p>
 
         <div class="buttons">
@@ -31,12 +40,18 @@
             <button class="btn" onclick="showPortList()">Список портов</button>
             <button class="btn" onclick="showFirewallControls()">Управление firewall'ом</button>
             <button class="btn" onclick="window.open('/logs.html', '_blank')">Просмотр логов</button>
+            <button class="btn" onclick="window.open('/settings.html', '_blank')">Дополнительные настройки</button>
         </div>
 
         <div class="services">
             <div class="service-item">
                 <h3>Активные порты</h3>
-                <ul class="port-list" id="open-ports"></ul>
+                <div class="port-list-container">
+                    <button class="toggle-list-btn" id="toggle-ports-btn" style="display: none;">
+                        <span id="toggle-ports-text">Развернуть список</span>
+                    </button>
+                    <ul class="port-list" id="open-ports"></ul>
+                </div>
                 <div id="forms"></div>
 
                 <div class="stats">
@@ -54,7 +69,7 @@
 
         <footer>
             <p>SyharikFW Management System | © 2025 Все права защищены</p>
-            <p>Версия: 1.1 Beta | Сборка: #SyFW-PORTS-14-10-2025</p>
+            <p>Версия: 2.0 | Сборка: #SyFW-PORTS-15-11-2025</p>
         </footer>
     </div>
     <script>
@@ -71,9 +86,23 @@
         let lastUpdateTimerId = null;
 
         setOffline();
-        // Периодически опрашиваем статус, чтобы OFFLINE->ONLINE менялся и обратно
+        
+        fetch(`${apiBase}/api/user`).then(r => r.json()).then(data => {
+            if (data.username) {
+                document.getElementById('username').textContent = data.username;
+            }
+        }).catch(() => {});
+        
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await fetch(`${apiBase}/api/auth/logout`, { method: 'POST' });
+                window.location.href = '/login.html';
+            } catch (e) {
+                window.location.href = '/login.html';
+            }
+        });
+        
         setInterval(() => refreshStatus(), 2000);
-        // Инициализация: подтянуть справочник и состояние
         Promise.all([
             fetch(`${apiBase}/api/well-known`).then(r => r.json()),
             fetch(`${apiBase}/api/state`).then(r => r.json())
@@ -83,9 +112,24 @@
             setLastUpdate(state.lastUpdateTs || Date.now());
             applyStatus(state.status);
         }).catch(() => {
-            // Если сервер недоступен — остаёмся OFFLINE, список пуст
             renderPorts([]);
             setLastUpdate(null);
+        });
+        
+        const togglePortsBtn = document.getElementById('toggle-ports-btn');
+        const portsList = document.getElementById('open-ports');
+        const MAX_VISIBLE_PORTS = 10;
+        let portsExpanded = false;
+        
+        togglePortsBtn.addEventListener('click', () => {
+            portsExpanded = !portsExpanded;
+            if (portsExpanded) {
+                portsList.style.maxHeight = 'none';
+                togglePortsBtn.querySelector('#toggle-ports-text').textContent = 'Свернуть список';
+            } else {
+                portsList.style.maxHeight = `${MAX_VISIBLE_PORTS * 50}px`;
+                togglePortsBtn.querySelector('#toggle-ports-text').textContent = 'Развернуть список';
+            }
         });
 
         function renderPorts(ports) {
@@ -103,6 +147,19 @@
                 portsListElement.appendChild(li);
             });
             totalPortsElement.textContent = String(uniqueSorted.length);
+            
+            const toggleBtn = document.getElementById('toggle-ports-btn');
+            if (uniqueSorted.length > MAX_VISIBLE_PORTS) {
+                toggleBtn.style.display = 'block';
+                portsListElement.style.maxHeight = `${MAX_VISIBLE_PORTS * 50}px`;
+                portsListElement.style.overflowY = 'auto';
+                portsExpanded = false;
+                toggleBtn.querySelector('#toggle-ports-text').textContent = 'Развернуть список';
+            } else {
+                toggleBtn.style.display = 'none';
+                portsListElement.style.maxHeight = 'none';
+                portsListElement.style.overflowY = 'visible';
+            }
         }
 
         function humanizeSince(ts) {
@@ -145,12 +202,10 @@
                 statusElement.classList.remove('offline');
                 statusElement.classList.add('online');
                 statusElement.textContent = 'СЕРВИС SyharikFW АКТИВЕН. СТАТУС: ONLINE';
-                // Блокируем кнопки управления портами
                 if (addBtn) addBtn.disabled = true;
                 if (removeBtn) removeBtn.disabled = true;
             } else {
                 setOffline();
-                // Разблокируем кнопки управления портами
                 if (addBtn) addBtn.disabled = false;
                 if (removeBtn) removeBtn.disabled = false;
             }
@@ -171,16 +226,19 @@
             const form = document.createElement('div');
             form.className = 'port-form';
             form.innerHTML = `
-                <input id="port-input" class="port-input" type="number" min="1" max="65535" placeholder="Введите номер порта (1-65535)">
+                <input id="port-input" class="port-input" type="text" placeholder="Порт или диапазон (например: 8080 или 1000-2000 или 80,443,1000-2000)">
+                <small style="color: #b0bec5; display: block; margin-top: 5px; text-align: left;">
+                    Примеры: 8080 (один порт), 1000-2000 (диапазон), 80,443,1000-2000 (несколько портов и диапазонов)
+                </small>
                 <button class="btn" id="add-port-btn">Добавить</button>
             `;
             formsContainer.appendChild(form);
             const input = form.querySelector('#port-input');
             const addBtn = form.querySelector('#add-port-btn');
             addBtn.addEventListener('click', async () => {
-                const value = Number(input.value);
-                if (!Number.isInteger(value) || value < 1 || value > 65535) {
-                    alert('Укажите корректный номер порта от 1 до 65535');
+                const value = input.value.trim();
+                if (!value) {
+                    alert('Введите порт или диапазон портов');
                     return;
                 }
                 try {
@@ -195,6 +253,8 @@
                     }
                     const state = await resp.json();
                     if (resp.ok) {
+                        const message = state.added ? `Добавлено портов: ${state.added}` : 'Порт добавлен';
+                        alert(message);
                         renderPorts(state.ports || []);
                         setLastUpdate(state.lastUpdateTs || Date.now());
                     } else {
@@ -211,26 +271,32 @@
             const form = document.createElement('div');
             form.className = 'port-form';
             form.innerHTML = `
-                <input id="port-remove-input" class="port-input" type="number" min="1" max="65535" placeholder="Введите порт для удаления">
+                <input id="port-remove-input" class="port-input" type="text" placeholder="Порт или диапазон (например: 8080 или 20-100 или 80,443,20-100)">
+                <small style="color: #b0bec5; display: block; margin-top: 5px; text-align: left;">
+                    Примеры: 8080 (один порт), 20-100 (диапазон), 80,443,20-100 (несколько портов и диапазонов)
+                </small>
                 <button class="btn" id="remove-port-btn">Удалить</button>
             `;
             formsContainer.appendChild(form);
             const input = form.querySelector('#port-remove-input');
             const removeBtn = form.querySelector('#remove-port-btn');
             removeBtn.addEventListener('click', async () => {
-                const value = Number(input.value);
-                if (!Number.isInteger(value)) {
-                    alert('Укажите корректный номер порта');
+                const value = input.value.trim();
+                if (!value) {
+                    alert('Введите порт или диапазон портов для удаления');
                     return;
                 }
                 try {
-                    const resp = await fetch(`${apiBase}/api/ports/${value}`, { method: 'DELETE' });
+                    const encodedValue = encodeURIComponent(value);
+                    const resp = await fetch(`${apiBase}/api/ports/${encodedValue}`, { method: 'DELETE' });
                     if (resp.status === 409) {
                         alert('Нельзя изменять порты во время работы SyharikFW!');
                         return;
                     }
                     const state = await resp.json();
                     if (resp.ok) {
+                        const message = state.deleted ? `Удалено портов: ${state.deleted}` : 'Порт удален';
+                        alert(message);
                         renderPorts(state.ports || []);
                         setLastUpdate(state.lastUpdateTs || Date.now());
                     } else {
@@ -248,7 +314,6 @@
             hint.className = 'port-form';
             hint.innerHTML = '<p>Обновляем список портов...</p>';
             formsContainer.appendChild(hint);
-            // Принудительно перечитать state из бэкенда
             fetch(`${apiBase}/api/state`).then(r => r.json()).then(state => {
                 renderPorts(state.ports || []);
                 setLastUpdate(state.lastUpdateTs || Date.now());

@@ -1,0 +1,14 @@
+[Unit]
+Description=SyharikFW Firewall (%i)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/firewall --run %i
+WorkingDirectory=/path/to/firewall
+Restart=no
+
+[Install]
+WantedBy=multi-user.target
+

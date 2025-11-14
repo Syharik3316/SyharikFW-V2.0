@@ -65,7 +65,16 @@
     <div class="corner-decoration bottom-right"></div>
 
     <div class="container">
-        <div class="team-name">SyharikFW</div>
+        <div class="header-top">
+            <div class="team-name">SyharikFW</div>
+            <div class="user-menu" id="user-menu">
+                <div class="user-info" id="user-info">
+                    <span class="user-avatar">👤</span>
+                    <span class="username" id="username">admin</span>
+                    <button class="logout-btn" id="logout-btn" title="Выйти">🚪</button>
+                </div>
+            </div>
+        </div>
         <h1>Логи Firewall'a</h1>
 
         <div class="log-stats">
@@ -92,18 +101,54 @@
 
         <button class="btn refresh-btn" onclick="loadLogs()">Обновить логи</button>
         
-        <div id="logs-container" class="logs-container">
-            <div class="log-entry">Загрузка логов...</div>
+        <div class="logs-wrapper">
+            <button class="toggle-list-btn" id="toggle-logs-btn" style="display: none;">
+                <span id="toggle-logs-text">Развернуть все логи</span>
+            </button>
+            <div id="logs-container" class="logs-container">
+                <div class="log-entry">Загрузка логов...</div>
+            </div>
         </div>
 
         <footer>
             <p>SyharikFW Logs | © 2025 Все права защищены</p>
+            <p>Версия: 2.0 | Сборка: #SyFW-PORTS-15-11-2025</p>
             <p><a href="/" style="color: #ff073a;">← Вернуться к управлению</a></p>
         </footer>
     </div>
 
     <script>
         let autoRefreshInterval = null;
+        let logsExpanded = false;
+        const MAX_VISIBLE_LOGS = 50;
+
+        fetch('/api/user').then(r => r.json()).then(data => {
+            if (data.username) {
+                document.getElementById('username').textContent = data.username;
+            }
+        }).catch(() => {});
+
+        document.getElementById('logout-btn').addEventListener('click', async () => {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/login.html';
+            } catch (e) {
+                window.location.href = '/login.html';
+            }
+        });
+        const toggleLogsBtn = document.getElementById('toggle-logs-btn');
+        const logsContainer = document.getElementById('logs-container');
+        
+        toggleLogsBtn.addEventListener('click', () => {
+            logsExpanded = !logsExpanded;
+            if (logsExpanded) {
+                logsContainer.style.maxHeight = 'none';
+                toggleLogsBtn.querySelector('#toggle-logs-text').textContent = 'Свернуть логи';
+            } else {
+                logsContainer.style.maxHeight = `${MAX_VISIBLE_LOGS * 60}px`;
+                toggleLogsBtn.querySelector('#toggle-logs-text').textContent = 'Развернуть все логи';
+            }
+        });
 
         function loadLogs() {
             fetch('/api/logs')
@@ -127,6 +172,8 @@
 
                     if (logs.length === 0) {
                         container.innerHTML = '<div class="log-entry">Логи пусты</div>';
+                        toggleLogsBtn.style.display = 'none';
+                        container.style.maxHeight = 'none';
                     } else {
                         container.innerHTML = logs.map(log => {
                             const isBlocked = log.includes('BLOCKED:');
@@ -138,6 +185,19 @@
                             const className = isBlocked ? 'blocked' : (isAllowed ? 'allowed' : '');
                             return `<div class="log-entry ${className}">${log}</div>`;
                         }).join('');
+                        
+                        if (logs.length > MAX_VISIBLE_LOGS) {
+                            toggleLogsBtn.style.display = 'block';
+                            if (!logsExpanded) {
+                                container.style.maxHeight = `${MAX_VISIBLE_LOGS * 60}px`;
+                                container.style.overflowY = 'auto';
+                            }
+                            toggleLogsBtn.querySelector('#toggle-logs-text').textContent = logsExpanded ? 'Свернуть логи' : 'Развернуть все логи';
+                        } else {
+                            toggleLogsBtn.style.display = 'none';
+                            container.style.maxHeight = 'none';
+                            container.style.overflowY = 'visible';
+                        }
                     }
 
                     blockedCount.textContent = blocked;
@@ -161,7 +221,6 @@
             }
         }
 
-        // Инициализация
         document.addEventListener('DOMContentLoaded', function() {
             loadLogs();
             toggleAutoRefresh();
@@ -169,7 +228,6 @@
             document.getElementById('auto-refresh').addEventListener('change', toggleAutoRefresh);
         });
 
-        // Очистка интервала при закрытии страницы
         window.addEventListener('beforeunload', function() {
             if (autoRefreshInterval) {
                 clearInterval(autoRefreshInterval);

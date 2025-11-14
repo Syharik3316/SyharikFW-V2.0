@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация - SyharikFW</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="favicon.ico" type="image/x-icon">
+    <style>
+        .login-container {
+            max-width: 450px;
+            margin: 100px auto;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .login-form {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .login-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 15px 20px;
+            color: white;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .login-input:focus {
+            outline: none;
+            border-color: #00d4ff;
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+        }
+        .login-input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .error-message {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 12px;
+            border-radius: 8px;
+            border-left: 4px solid #ff6b6b;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="side-decoration left"></div>
+    <div class="side-decoration right"></div>
+    <div class="corner-decoration top-left"></div>
+    <div class="corner-decoration bottom-right"></div>
+
+    <div class="login-container">
+        <div class="team-name" style="font-size: 2.5rem; margin-bottom: 30px;">SyharikFW</div>
+        <h1 style="font-size: 1.8rem; margin-bottom: 30px;">Вход в систему</h1>
+        
+        <div class="error-message" id="error-message"></div>
+        
+        <form class="login-form" id="login-form">
+            <input 
+                type="text" 
+                id="username" 
+                class="login-input" 
+                placeholder="Логин" 
+                required 
+                autocomplete="username"
+            >
+            <input 
+                type="password" 
+                id="password" 
+                class="login-input" 
+                placeholder="Пароль" 
+                required 
+                autocomplete="current-password"
+            >
+            <button type="submit" class="btn" style="margin-top: 10px;">Войти</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorMsg = document.getElementById('error-message');
+            
+            errorMsg.classList.remove('show');
+            
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    window.location.href = '/';
+                } else {
+                    errorMsg.textContent = data.error || 'Ошибка авторизации';
+                    errorMsg.classList.add('show');
+                }
+            } catch (error) {
+                errorMsg.textContent = 'Ошибка соединения с сервером';
+                errorMsg.classList.add('show');
+            }
+        });
+        
+        fetch('/api/auth/check').then(r => r.json()).then(data => {
+            if (data.authenticated) {
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html>
+
