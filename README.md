@@ -25,9 +25,8 @@ SyharikFW by Syharik3316 V2.0
 - Linux с поддержкой eBPF/XDP (ядро 4.18+)
 - Компилятор C (gcc или clang)
 - libbpf библиотека
-- bpftool
+- linux-tools-common
 - Node.js (версия 14+)
-- npm
 
 ### Системные зависимости:
 
