@@ -35,13 +35,13 @@ SyharikFW by Syharik3316 V2.0
 ```bash
 sudo apt update
 sudo apt install -y clang llvm linux-tools-common libbpf-dev libelf-dev zlib1g-dev \
-    build-essential linux-headers-$(uname -r) nodejs npm
+    build-essential linux-headers-$(uname -r) nodejs
 ```
 
 #### CentOS/RHEL/Fedora:
 ```bash
 sudo dnf install -y clang llvm linux-tools-common libbpf-devel elfutils-libelf-devel \
-    zlib-devel kernel-devel-$(uname -r) gcc make nodejs npm
+    zlib-devel kernel-devel-$(uname -r) gcc make nodejs
 ```
 
 ### Node.js зависимости:
